@@ -10,3 +10,6 @@
 [submodule "vpn-utils"]
 	path = vpn-utils
 	url = https://github.com/Lifelong-Learning-Assisttant/vpn-utils.git
+[submodule "code_base_indexing"]
+	path = code_base_indexing
+	url = https://github.com/medphisiker/code_base_indexing.git
