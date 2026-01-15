@@ -8,37 +8,28 @@ skinparam shadowing false
 
 package "Внешний уровень" {
   [Пользователь] as U
-  [Web UI\nStreamlit Frontend] as UI
+  [Web UI\nReact Frontend] as UI
 }
 
 package "Сервисный слой" {
-  [API Gateway\nBackend Service] as API
-  [LLM Agent / Orchestrator] as AG
+  [Web Backend\nFastAPI] as API
+  [Agent Service\nOrchestrator] as AG
 }
 
 package "Основные сервисы" {
-  [LLM Service\nLocal / Remote] as LLM
-  [Retriever Service] as RET
+  [LLM Service\n(Z.ai / OpenAI)] as LLM
+  [RAG Service\n(Retrieval)] as RET
+  [Test Generator\n(Quiz Engine)] as GEN
 }
 
-package "Background Tasks" #FFFDE7 {
-  [Task Queue\nRabbitMQ] as MQ
-  [Worker Pool] as WP
-}
-
-package "Базы для Retriever" #F3E5F5 {
-  [Vector DB\nFAISS] as VDB
-  [Elasticsearch] as IDX
+package "Базы данных" #F3E5F5 {
+  [Qdrant\nVector DB] as VDB
+  [Redis\nCache & Storage] as REDIS
 }
 
 package "Данные пользователя" #E8F5E9 {
   [User Storage\nPostgreSQL] as DB
-  [Data Storage\nMinIO / Local FS] as FS
-}
-
-package "Абстрактные модули" {
-  [Source Module] as SRC
-  [Functional Modules] as FUNC
+  [Data Storage\nLocal FS] as FS
 }
 
 ' ================== СВЯЗИ ==================
@@ -100,8 +91,8 @@ skinparam class {
   BackgroundColor<<VDB>> #E8F5E9
   BorderColor<<VDB>> #1B5E20
     
-  BackgroundColor<<IDX>> #FBE9E7
-  BorderColor<<IDX>> #BF360C
+  BackgroundColor<<REDIS>> #FBE9E7
+  BorderColor<<REDIS>> #BF360C
 }
 
 @enduml

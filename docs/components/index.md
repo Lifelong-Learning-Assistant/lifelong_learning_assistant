@@ -6,16 +6,16 @@
 
 | Сервис | Описание | Документация |
 |-----------|----------|------|
-| **Agent Service** | Основной оркестратор системы (FastAPI + LangGraph) | [`agent_service/docs/`](../../agent_service/docs/) |
-| **RAG Service** | Сервис поиска по учебным материалам (FastAPI + Qdrant) | [`rag/docs/`](../../rag/docs/) |
-| **Test Generator** | Генератор квизов и оценка ответов | [`test_generator/docs/`](../../test_generator/docs/) |
-| **Web UI Service** | Веб-сервис: фронтенд (React) и бэкенд (FastAPI) | [`web_ui_service/docs/`](../../web_ui_service/docs/) |
+| **Agent Service** | Основной оркестратор системы (FastAPI + LangGraph) | [`agent_service/`](../../agent_service/README.md) |
+| **RAG Service** | Сервис поиска по учебным материалам (FastAPI + Qdrant) | [`rag/`](../../rag/README.md) |
+| **Test Generator** | Генератор квизов и оценка ответов | [`test_generator/`](../../test_generator/README.md) |
+| **Web UI Service** | Веб-сервис: фронтенд (React) и бэкенд (FastAPI) | [`web_ui_service/`](../../web_ui_service/README.md) |
 
 ## Дополнительная информация
 
-* **Архитектура системы**: [`03-architecture.md`](../03-architecture.md)
-* **Обзор компонентов**: [`01-overview.md`](../01-overview.md)
-* **Скрипты развертывания**: [`deployment_scripts.md`](../deployment_scripts.md)
+* **Архитектура системы**: [`architecture.md`](../architecture.md)
+* **Обзор компонентов**: [`index.md`](../index.md)
+* **Скрипты развертывания**: [`deployment/scripts.md`](../deployment/scripts.md)
 
 ---
 

@@ -20,7 +20,7 @@
 
 ## 1. Ключевые архитектурные принципы
 
-> **Важно:** Данный документ дополняет [`01-overview.md`](01-overview.md) архитектурными деталями и техническими решениями.
+> **Важно:** Данный документ дополняет [`index.md`](index.md) архитектурными деталями и техническими решениями.
 
 ### Ключевые концепции
 
@@ -50,13 +50,13 @@
 
 ### 2.1 Быстрый Q&A с provenance
 
-![Быстрый Q&A с provenance](diagrams-src/03-architecture/quick-qa-sequence.svg)
+![Быстрый Q&A с provenance](diagrams/architecture/quick-qa-sequence.svg)
 
 *Диаграмма последовательности: Быстрый Q&A с provenance*
 
 ### 2.2 Генерация квиза (sync + async)
 
-![Генерация квиза (sync + async)](diagrams-src/03-architecture/quiz-generation-sequence.svg)
+![Генерация квиза (sync + async)](diagrams/architecture/quiz-generation-sequence.svg)
 
 *Диаграмма последовательности: Генерация квиза (sync + async)*
 
@@ -66,20 +66,12 @@
 
 Для детального изучения компонентов системы обращайтесь к специализированной документации ([ссылка](./components/index.md)).
 
-### 3.1 Architecture Decision Records (ADR)
-
-| Решение | Документ | Статус |
-|---------|----------|--------|
-| Выбор векторной БД (Qdrant) | [`04-adr/0001-vector-db-choice.md`](04-adr/0001-vector-db-choice.md) | ✅ Принято |
-| Использование Redis для кэша | [`04-adr/0002-cache-choice.md`](04-adr/0002-cache-choice.md) | ✅ Принято |
-| Провайдеры LLM (Z.ai, OpenRouter) | [`04-adr/0003-llm-providers.md`](04-adr/0003-llm-providers.md) | ✅ Принято |
-
-### 3.2 Диаграммы и схемы
+### 3.1 Диаграммы и схемы
 
 | Диаграмма | Формат | Файл | Назначение |
 |-----------|--------|------|------------|
-| **System Components** | PlantUML | [`diagrams-src/03-architecture/system-components.puml`](diagrams_src/03-architecture/system-components.puml) | 📋 Планируется |
-| **Quick Q&A Flow** | Mermaid | [`diagrams_src/03-architecture/quick-qa-sequence.mmd`](diagrams_src/03-architecture/quick-qa-sequence.mmd) | 📋 Планируется |
+| **System Components** | PlantUML | [`diagrams/architecture/system-components.puml`](diagrams/architecture/system-components.puml) | 📋 Планируется |
+| **Quick Q&A Flow** | Mermaid | [`diagrams/architecture/quick-qa-sequence.mmd`](diagrams/architecture/quick-qa-sequence.mmd) | 📋 Планируется |
 
 ---
 

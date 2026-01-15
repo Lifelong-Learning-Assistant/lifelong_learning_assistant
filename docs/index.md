@@ -2,7 +2,7 @@
 
 ## Архитектура Lifelong Learning Assistant
 
-![system-diagram](./diagrams-src/01-overview/system-diagram.svg)
+![system-diagram](./diagrams/overview/system-diagram.svg)
 
 - пользователь взаимодействует через `Web UI`
 - все «умные» операции оркеструет `LLM Agent (Orchestrator)`
@@ -65,8 +65,5 @@
 
 ## Где дальше смотреть (ссылки в docs)
 
-* Архитектура & sequence diagrams: `03-architecture.md`
+* Архитектура & sequence diagrams: `architecture.md`
 * Component Cards: `components/index.md`
-* Deep Dive: `components/deep/`
-* ADR (решения архитектуры): `04-adr/`
-* Changelog: `05-changelog.md`

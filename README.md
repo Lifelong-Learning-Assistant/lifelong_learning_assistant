@@ -92,13 +92,13 @@
 
 ## 📖 Документация
 
-- **[Обзор системы](docs/01-overview.md)** - карта проекта и компонентов  
-- **[Архитектура системы](docs/03-architecture.md)** - ключевые концепты, sequence diagrams
+- **[Обзор системы](docs/index.md)** - карта проекта и компонентов
+- **[Архитектура системы](docs/architecture.md)** - ключевые концепты, sequence diagrams
 - **[Компоненты системы](docs/components/index.md)** - детальное описание модулей и ссылки на документацию сервисов
-  - [Agent Service](agent_service/docs/agent_documentation.md)
+  - [Agent Service](agent_service/README.md)
   - [RAG Service](rag/README.md)
   - [Test Generator](test_generator/README.md)
-  - [Web UI Service](web_ui_service/docs/README.md)
+  - [Web UI Service](web_ui_service/README.md)
 
 ---
 
