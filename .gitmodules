@@ -13,3 +13,6 @@
 [submodule "rag"]
 	path = rag
 	url = git@github.com:Lifelong-Learning-Assisttant/rag.git
+[submodule ".kilocode"]
+	path = .kilocode
+	url = git@github.com:medphisiker/life_long_learning_agent_kilocode_rules.git
