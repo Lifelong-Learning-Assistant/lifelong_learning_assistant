@@ -30,16 +30,14 @@ tags: ["documentation", "structure"]
 docs/
 ├─ docs-overview.md                  # (эта страница) структура и rationale
 ├─ 01-overview.md                   # Карта проекта + краткий обзор компонентов
-├─ 02-getting-started.md            # Get it started (локальный запуск, основные команды)
 ├─ 03-architecture.md               # Архитектура & design (концепты, sequence diagrams)
-├─ faq/                             # Часто задаваемые вопросы
+├─ deployment_scripts.md            # Описание скриптов развертывания (start/stop)
+├─ naming_conventions.md            # Соглашения об именовании
+├─ pluntuml-diagram-renderer.md     # Инструкция по рендерингу диаграмм
+├─ FAQ/                             # Часто задаваемые вопросы
 │   ├─ faq-overview.md              # Индекс FAQ
-│   └─ 01-retrievir-indices.md      # Работа с retrievir индексами во время обновления
-├─ 04-adr/                          # Architecture Decision Records
-│   ├─ adr-overview.md 
-│   └─ 0001-use-faiss-vs-remote.md
-├─ 05-changelog.md                  # Хронология изменений (high-level)
-├─ 06-ideas/                        # Сохраняем все наши идеи
+│   └─ 01-retrievir-indices.md      # Работа с индексами
+├─ 06-ideas/                        # Идеи и предложения
 │   ├─ idea1.md
 │   └─ idea2.md
 ├─ diagrams-src                     # Храним исходники для PluntUML-диаграмм
