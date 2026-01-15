@@ -10,3 +10,6 @@
 [submodule "vpn-utils"]
 	path = vpn-utils
 	url = https://github.com/Lifelong-Learning-Assisttant/vpn-utils.git
+[submodule "rag"]
+	path = rag
+	url = git@github.com:Lifelong-Learning-Assisttant/rag.git
