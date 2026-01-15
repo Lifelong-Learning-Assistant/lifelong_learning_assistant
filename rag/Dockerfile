@@ -4,7 +4,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Установка uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.9.24 /uv /usr/local/bin/uv
 
 # Копирование файлов проекта
 COPY pyproject.toml uv.lock* ./
@@ -15,6 +15,8 @@ RUN uv pip install --system -e .
 
 # Копирование кода приложения
 COPY app/ ./app/
+COPY llm_service/ ./llm_service/
+COPY logger.py settings.py ./
 
 # Переменные окружения
 ENV PYTHONUNBUFFERED=1

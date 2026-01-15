@@ -1,12 +1,12 @@
 """RAG сервис для генерации ответов"""
 from typing import List
 from langchain_core.documents import Document
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from app.config import settings
 from app.retriever import RAGRetriever
+from llm_service.llm_client import LLMClient
 
 
 class RAGService:
@@ -19,14 +19,11 @@ class RAGService:
     
     def _init_llm(self):
         """Инициализация LLM"""
-        llm_kwargs = {
-            "model": settings.openai.chat_model_name,
-            "temperature": 0.4,
-        }
-        if settings.openai.api_base:
-            llm_kwargs["openai_api_base"] = settings.openai.api_base
-        
-        self.llm = ChatOpenAI(**llm_kwargs)
+        client = LLMClient(provider="openai")
+        self.llm = client.create_chat(
+            model=settings.openai.chat_model_name,
+            temperature=0.4,
+        )
     
     def _init_prompt(self):
         """Инициализация промпта"""

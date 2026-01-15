@@ -8,11 +8,10 @@ ProviderName = Literal["openai", "openrouter", "mistral"]
 class LLMSettings(BaseSettings):
     """
     Глобальные настройки клиента LLM/Embeddings.
-    - Загружает значения из переменных окружения с префиксом LLM_ и из .env.
+    - Загружает значения из переменных окружения и из .env.
     - Отсутствие переменных окружения НЕ приводит к ошибкам — используются дефолты.
     """
     model_config = SettingsConfigDict(
-        env_prefix="LLM_",
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -25,9 +24,10 @@ class LLMSettings(BaseSettings):
     log_level: str = Field(default="INFO")
 
     # ---- OpenAI ----
-    openai_chat_model: str = Field(default="gpt-4o-mini")
-    openai_emb_model: str = Field(default="text-embedding-3-small")
+    openai_chat_model_name: str = Field(default="gpt-4o-mini")
+    openai_embedding_model_name: str = Field(default="text-embedding-3-small")
     openai_api_key: SecretStr | None = Field(default=None)
+    openai_api_base: str | None = Field(default=None)
 
     # ---- OpenRouter ----
     openrouter_chat_model: str = Field(default="openrouter/auto")
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print("=== LLMSettings mini-test ===")
     s = get_settings()
     print("default_provider:", s.default_provider)
-    print("openai_chat_model:", s.openai_chat_model)
+    print("openai_chat_model_name:", s.openai_chat_model_name)
     print("openrouter_base_url:", s.openrouter_base_url)
 
     print("has OPENAI key?:", bool(s.openai_api_key and s.openai_api_key.get_secret_value()))
@@ -75,6 +75,6 @@ if __name__ == "__main__":
     print("has MISTRAL key?:", bool(s.mistral_api_key and s.mistral_api_key.get_secret_value()))
 
     # env переопределяет дефолт
-    os.environ["LLM_OPENAI_CHAT_MODEL"] = "gpt-4o-mini-2025"
+    os.environ["OPENAI_CHAT_MODEL_NAME"] = "gpt-4o-mini-2025"
     s2 = get_settings()
-    print("override openai_chat_model:", s2.openai_chat_model)
+    print("override openai_chat_model_name:", s2.openai_chat_model_name)

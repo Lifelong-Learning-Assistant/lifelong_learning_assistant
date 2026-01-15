@@ -35,24 +35,25 @@ FastAPI сервис для поиска и генерации ответов н
 ### Ключевые технологии
 
 **🔍 Поиск:**
-- **Parent-Child стратегия**: маленькие child chunks для точного поиска, большие parent chunks для контекста
-- **Гибридный поиск**: комбинация dense (OpenAI) и sparse (BM25) embeddings
-- **HyDE (опционально)**: генерация гипотетического документа для улучшения поиска
+- **Parent-Child стратегия**: маленькие child chunks для точного поиска, большие parent chunks для контекста.
+- **Гибридный поиск**: комбинация dense (OpenAI) и sparse (BM25) embeddings.
+- **HyDE (опционально)**: генерация гипотетического документа для улучшения поиска.
 
 **💾 Хранилище:**
-- **Qdrant**: векторная БД для child chunks (2071 документов)
-- **Redis**: key-value хранилище для parent chunks
+- **Qdrant**: векторная БД для child chunks (2071 документов).
+- **Redis**: key-value хранилище для parent chunks.
 
 **🤖 LLM:**
-- **Embeddings**: OpenAI text-embedding-3-large (3072 dimensions)
-- **Generation**: GPT-4o-mini для генерации ответов
+- **Embeddings**: OpenAI text-embedding-3-large (3072 dimensions).
+- **Generation**: GPT-4o-mini для генерации ответов.
+- **llm_service**: единый интерфейс для работы с провайдерами (OpenAI, OpenRouter, Mistral).
 
 ### Что такое HyDE?
 
 **HyDE** (Hypothetical Document Embeddings) — техника улучшения поиска:
-1. LLM генерирует гипотетический ответ на запрос
-2. Этот ответ используется для поиска вместо исходного запроса
-3. Гипотетический ответ ближе к реальным документам в векторном пространстве
+1. LLM генерирует гипотетический ответ на запрос.
+2. Этот ответ используется для поиска вместо исходного запроса.
+3. Гипотетический ответ ближе к реальным документам в векторном пространстве.
 
 **Когда использовать HyDE:**
 - ✅ Сложные технические вопросы
@@ -87,25 +88,38 @@ OPENAI_API_KEY=sk-your-key-here
 ### 2. Запуск
 
 ```bash
-# Запустить все сервисы
-docker-compose up -d --build
+# Запустить все сервисы через Docker
+docker compose up -d --build
 ```
 
 ### 3. Загрузка данных (только первый раз!)
 
-```bash
-# Открыть Jupyter notebook
-jupyter notebook notebook/rag_etl_loader.ipynb
+Если базы данных пусты, выберите один из вариантов наполнения:
 
-# Выполнить все ячейки (Cell -> Run All)
+#### Вариант А: Загрузка из исходных Markdown-файлов (ETL)
+Используйте этот способ, если хотите запустить весь процесс обработки текста и создания эмбеддингов заново.
+
+Запустите `Jupyter notebook` в `notebook/rag_etl_loader.ipynb`
+
+В интерфейсе Jupyter откройте файл и выполните:
+```
+Cell -> Run All
 ```
 
-Подождите, пока данные загрузятся в Qdrant и Redis (~5 минут).
+#### Вариант Б: Быстрое развертывание из бэкапа (рекомендуется)
+Скачивание готовых снапшотов Qdrant и дампов Redis. Это значительно быстрее, чем полная пересборка индекса.
+
+```bash
+# Запустить утилиту скачивания (нужен Docker)
+docker run --rm -v $(pwd)/rag/backups:/backups \
+  ghcr.io/lifelong-learning-assisttant/rag-backup-downloader:v001
+```
+Подробную инструкцию по восстановлению из этих файлов см. в [Backup Downloader](./backup_downloader/README.md) и [Qdrant Migration](./docs/qdrant-migration.md).
 
 ### 4. Проверка
 
 ```bash
-python test_api.py
+uv run python tests/evaluate_rag.py
 ```
 
 ## 📡 Эндпоинты API
@@ -155,6 +169,13 @@ response = requests.post(
 print(response.json()["answer"])
 ```
 
+## 📊 Оценка качества (Evaluation)
+
+В проекте настроена система оценки качества ответов:
+- **Ragas**: Ноутбук [`notebook/ragas_evaluation.ipynb`](./notebook/ragas_evaluation.ipynb) позволяет оценить Faithfulness, Answer Relevance и другие метрики.
+- **Metrics**: Ноутбук [`notebook/rag_metrics_evaluation.ipynb`](./notebook/rag_metrics_evaluation.ipynb) для сравнения качества поиска.
+- **Datasets**: В папке [`tests/`](./tests) содержатся наборы вопросов и эталонных ответов.
+
 ## 🔗 Полезные ссылки
 
 | Сервис | URL |
@@ -166,11 +187,11 @@ print(response.json()["answer"])
 ## 🛠️ Управление сервисами
 
 ```bash
-docker-compose up -d --build  # Запустить и собрать
-docker-compose down           # Остановить
-docker-compose restart rag-api # Перезапустить API
-docker-compose logs -f rag-api # Логи API
-docker-compose ps             # Статус
+docker compose up -d --build  # Запустить и собрать
+docker compose down           # Остановить
+docker compose restart rag-api # Перезапустить API
+docker compose logs -f rag-api # Логи API
+docker compose ps             # Статус
 ```
 
 ## 🐳 Сервисы
@@ -188,51 +209,47 @@ docker-compose ps             # Статус
 
 ```bash
 # Запустить только инфраструктуру
-docker-compose up -d qdrant redis redis-commander
+docker compose up -d qdrant redis redis-commander
 
 # Запустить API локально
 uv run uvicorn app.main:app --reload
 ```
 
 ### Пересборка после изменений
-
 ```bash
-docker-compose up -d --build rag-api
+docker compose up -d --build rag-api
 ```
 
 ## 📁 Структура
 
-```
+```text
 .
 ├── app/                  # FastAPI приложение
-│   ├── main.py          # Основное приложение
-│   ├── config.py        # Конфигурация
-│   ├── retriever.py     # RAG Retriever
-│   └── rag_service.py   # RAG Service
-├── notebook/            # ETL процесс
-│   └── rag_etl_loader.ipynb
-├── data/                # Markdown файлы
-├── docker-compose.yml   # Docker конфигурация
-├── Makefile            # Команды для управления
-└── test_api.py         # Тесты
+│   ├── main.py           # Роуты и запуск
+│   ├── config.py         # Настройки Pydantic-settings
+│   ├── retriever.py      # Логика поиска (Hybrid, HyDE)
+│   └── rag_service.py    # Сервис генерации ответа
+├── backup_downloader/    # Утилита для скачивания бэкапов БД
+├── llm_service/          # Модуль для работы с разными LLM
+├── notebook/             # ETL процессы и оценка (Ragas)
+├── tests/                # Тесты и датасеты для оценки
+├── pyproject.toml        # Зависимости (uv)
+└── settings.py           # Глобальные настройки провайдеров
 ```
 
 ## ❓ Проблемы?
 
 ### "Коллекция не найдена"
-Запустите ETL: `make etl` и выполните все ячейки
+Запустите ETL процесс в Jupyter ([`notebook/rag_etl_loader.ipynb`](./notebook/rag_etl_loader.ipynb)) или скачайте бэкап.
 
 ### Сервисы не запускаются
 ```bash
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 ```
 
 ### API не отвечает
-```bash
-make logs-api  # Посмотреть логи
-make restart-api  # Перезапустить
-```
+Проверьте логи: `docker compose logs -f rag-api`.
 
 ## 🤖 Использование в AI-агентах
 
@@ -265,22 +282,22 @@ def search_ml_handbook(query: str) -> str:
 ## 📊 Технологии
 
 - **FastAPI** - REST API
-- **LangChain** - RAG pipeline с HyDE
-- **Qdrant** - Векторная БД (hybrid search: dense + sparse)
+- **LangChain** - RAG пайплайн
+- **Qdrant** - Векторная БД (hybrid search)
 - **Redis** - Хранилище parent chunks
-- **OpenAI** - Embeddings (text-embedding-3-large) + LLM (GPT-4o-mini)
-- **BM25** - Sparse embeddings для гибридного поиска
+- **OpenAI** - Embeddings & LLM
+- **BM25** - Sparse embeddings
+- **Ragas** - Фреймворк для оценки RAG
 
 ## ⚙️ Настройки RAG
 
 ### Переменные окружения
 
 ```env
-# RAG настройки
 RAG_RETRIEVAL_TOP_K=10              # Количество документов для поиска
 RAG_MAX_CONTEXT_TOKENS=4000         # Максимум токенов в контексте
 RAG_USE_HYDE_BY_DEFAULT=false       # Использовать HyDE по умолчанию
-RAG_SCORE_THRESHOLD=0.7             # Порог скора (0.0-1.0, меньше = строже)
+RAG_SCORE_THRESHOLD=0.7             # Порог скора (меньше = строже)
 ```
 
 ### Рекомендации по порогу скора

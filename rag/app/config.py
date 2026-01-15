@@ -31,7 +31,7 @@ class OpenAIConfig(ConfigBase):
 
     model_config = SettingsConfigDict(env_prefix="openai_")
 
-    api_key: str = Field(description="API ключ OpenAI")
+    api_key: str | None = Field(default=None, description="API ключ OpenAI")
     api_base: str | None = Field(default=None, description="Базовый URL API OpenAI")
     embedding_model_name: str = Field(
         default="text-embedding-3-large",

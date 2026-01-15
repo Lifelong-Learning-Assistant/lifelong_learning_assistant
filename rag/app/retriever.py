@@ -3,7 +3,6 @@ import tiktoken
 from typing import List, Tuple
 from langchain_core.documents import Document
 from langchain_core.load import loads
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_qdrant import QdrantVectorStore, RetrievalMode
@@ -12,6 +11,7 @@ from langchain_community.storage import RedisStore
 from qdrant_client import QdrantClient
 
 from app.config import settings
+from llm_service.llm_client import LLMClient
 
 
 class RAGRetriever:
@@ -28,13 +28,10 @@ class RAGRetriever:
     
     def _init_embeddings(self):
         """Инициализация embedding моделей"""
-        embedding_kwargs = {
-            "model": settings.openai.embedding_model_name,
-        }
-        if settings.openai.api_base:
-            embedding_kwargs["openai_api_base"] = settings.openai.api_base
-        
-        self.dense_embeddings = OpenAIEmbeddings(**embedding_kwargs)
+        client = LLMClient(provider="openai")
+        self.dense_embeddings = client.create_embeddings(
+            model=settings.openai.embedding_model_name
+        )
         self.sparse_embeddings = FastEmbedSparse(model_name="Qdrant/bm25")
     
     def _init_qdrant(self):
@@ -72,14 +69,11 @@ class RAGRetriever:
     
     def _init_hyde_llm(self):
         """Инициализация LLM для HyDE"""
-        llm_kwargs = {
-            "model": settings.openai.chat_model_name,
-            "temperature": 0.7,  # Выше температура для разнообразия
-        }
-        if settings.openai.api_base:
-            llm_kwargs["openai_api_base"] = settings.openai.api_base
-        
-        self.hyde_llm = ChatOpenAI(**llm_kwargs)
+        client = LLMClient(provider="openai")
+        self.hyde_llm = client.create_chat(
+            model=settings.openai.chat_model_name,
+            temperature=0.7,  # Выше температура для разнообразия
+        )
         
         # Промпт для генерации гипотетического документа
         hyde_template = """Ты — эксперт по машинному обучению и data science.

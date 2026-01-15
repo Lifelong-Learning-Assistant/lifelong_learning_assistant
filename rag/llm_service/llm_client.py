@@ -165,7 +165,7 @@ class LLMClient:
         if override:
             return override
         if provider == "openai":
-            return self.cfg.openai_chat_model
+            return self.cfg.openai_chat_model_name
         if provider == "openrouter":
             return self.cfg.openrouter_chat_model
         if provider == "mistral":
@@ -177,7 +177,7 @@ class LLMClient:
         if override:
             return override
         if provider == "openai":
-            return self.cfg.openai_emb_model
+            return self.cfg.openai_embedding_model_name
         if provider == "openrouter":
             return self.cfg.openrouter_emb_model
         if provider == "mistral":
@@ -215,6 +215,8 @@ class LLMClient:
 
             if p == "openai":
                 self.log.debug("create_chat: OpenAI, model=%s", m)
+                if self.cfg.openai_api_base:
+                    common["base_url"] = self.cfg.openai_api_base
                 return ChatOpenAI(**common)
 
             base_url = getattr(self.cfg, "openrouter_base_url", "https://openrouter.ai/api/v1")
@@ -259,7 +261,7 @@ class LLMClient:
             params = dict(
                 model=m,
                 api_key=key,
-                request_timeout=self.cfg.request_timeout_s,
+                timeout=self.cfg.request_timeout_s,
                 max_retries=0,
                 **kwargs,
             )
@@ -275,6 +277,8 @@ class LLMClient:
                 self.log.debug("create_embeddings: OpenRouter, model=%s, base=%s", m, base_url)
             else:
                 self.log.debug("create_embeddings: OpenAI, model=%s", m)
+                if self.cfg.openai_api_base:
+                    params["base_url"] = self.cfg.openai_api_base
             return OpenAIEmbeddings(**params)
 
         if p == "mistral":

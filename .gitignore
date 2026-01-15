@@ -1,7 +1,5 @@
 # Ignore Yandex handbook raw markdown data
 data/yandex-handbook-downloaded
-.repomix
-repomix-*
 
 # Operating System and Editor Specific Files
 .DS_Store
