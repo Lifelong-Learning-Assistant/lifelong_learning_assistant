@@ -94,10 +94,12 @@
 
 - **[Обзор системы](docs/01-overview.md)** - карта проекта и компонентов  
 - **[Архитектура системы](docs/03-architecture.md)** - ключевые концепты, sequence diagrams
-- **[Компоненты системы](docs/components/index.md)** - детальное описание модулей
-  - [Карточки компонентов](docs/components/cards/) - краткий обзор архитектурных блоков
-  - [Deep Dive документация](docs/components/deep/) - техническая документация
+- **[Компоненты системы](docs/components/index.md)** - детальное описание модулей и ссылки на документацию сервисов
+  - [Agent Service](agent_service/docs/agent_documentation.md)
+  - [RAG Service](rag/README.md)
+  - [Test Generator](test_generator/README.md)
+  - [Web UI Service](web_ui_service/docs/README.md)
 
 ---
 
-*README.md обновлен: 2025-11-02*
+*README.md обновлен: 2026-01-15*

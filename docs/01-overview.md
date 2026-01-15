@@ -27,7 +27,7 @@
 ### User Data (Данные пользователя)
 
 * **User Storage (Postgres)** — пользователи, конфигурации, результаты квизов, метаданные карточек, интервалы spaced repetition.
-* **Data Storage (MinIO / Local FS)** — сырые файлы: загруженные книги, web-snapshots, экспорты Obsidian, аудиозаписи.
+* **Data Storage (MinIO / Local FS)** — сырые файлы: загруженные книги, web-snapshots.
 
 > Эти хранилища содержат всё, что относится к данным пользователя и долговременному хранению.
 
@@ -39,7 +39,7 @@
 
 ### Data Sources
 
-* **Source Module** — Obsidian, Books (fb2/epub), Telegram, Tavily (web), Context7 (docs) и т.п. Адаптеры собирают/фильтруют сырой контент и либо индексируют его, либо отдают Orchestrator для разовой обработки.
+* **Source Module** — Books (fb2/epub), Telegram, Tavily (web), Context7 (docs) и т.п. Адаптеры собирают/фильтруют сырой контент и либо индексируют его, либо отдают Orchestrator для разовой обработки.
 
 ### Functional Modules
 
@@ -51,7 +51,7 @@
 1. **Интерактивный пользовательский запрос**
    UI → API → Orchestrator → (Retriever → FAISS/ES) + (LLM) → ответ пользователю (и/или создание background task).
 
-2. **Добавление/обновление источника (книга, Obsidian, web snapshot)**
+2. **Добавление/обновление источника (книга, web snapshot)**
    Adapter → Data Storage (FS/MinIO) → MQ → Worker → (Embedding Service → Vector DB) + (Indexing → Elasticsearch) + запись метаданных в Postgres.
 
 3. **Асинхронная обработка**
