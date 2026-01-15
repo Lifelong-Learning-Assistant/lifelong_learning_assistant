@@ -1,0 +1,109 @@
+name: life_learning_assistant_prod
+
+services:
+  # 1. RAG Service - Production
+  rag:
+    image: ghcr.io/lifelong-learning-assisttant/rag_service:v001
+    ports:
+      - "8000:8000"
+    environment:
+      - QDRANT_HOST=qdrant
+      - REDIS_HOST=redis
+    networks:
+      - rag_network
+      - web_ui_network
+    depends_on:
+      - qdrant
+      - redis
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rag_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - rag_network
+    restart: unless-stopped
+
+  # 2. Test Generator - Production
+  test_generator:
+    image: ghcr.io/lifelong-learning-assisttant/test_generator:v001
+    ports:
+      - "52812:8000"
+    networks:
+      - test_generator_network
+      - web_ui_network
+    restart: unless-stopped
+
+  # 3. Agent Service - Production
+  agent_service:
+    image: ghcr.io/lifelong-learning-assisttant/agent_service:v001
+    ports:
+      - "8270:8270"
+    volumes:
+      - ./agent_service/app_settings-prod.json:/app/app_settings.json:ro
+    environment:
+      - RAG_SERVICE_URL=http://rag:8000
+      - TEST_GENERATOR_SERVICE_URL=http://test_generator:8000
+      - WEB_UI_URL=http://web_ui_backend:8151
+    command: uv run python app.py --settings app_settings.json
+    networks:
+      - web_ui_network
+      - rag_network
+      - test_generator_network
+    depends_on:
+      - rag
+      - test_generator
+    restart: unless-stopped
+
+  # 4. Web UI Backend - Production
+  web_ui_backend:
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001
+    ports:
+      - "8151:8151"
+    volumes:
+      - ./web_ui_service/backend/app_settings-prod.json:/app/app_settings.json:ro
+    environment:
+      - BACKEND_PORT=8151
+      - AGENT_SERVICE_URL=http://agent_service:8270
+      - WS_TOKEN=${WS_TOKEN}
+      - SETTINGS_FILE=app_settings.json
+    networks:
+      - web_ui_network
+    restart: unless-stopped
+
+  # 5. Web UI Frontend - Production
+  web_ui_frontend:
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v001
+    ports:
+      - "8150:80"
+    depends_on:
+      - web_ui_backend
+    networks:
+      - web_ui_network
+    restart: unless-stopped
+
+networks:
+  web_ui_network:
+    driver: bridge
+    name: web_ui_network
+  rag_network:
+    driver: bridge
+    name: rag_rag_network
+  test_generator_network:
+    driver: bridge
+    name: test_generator_default
+
+volumes:
+  qdrant_data:
