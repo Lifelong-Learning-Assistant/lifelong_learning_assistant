@@ -1,2 +1,0 @@
-# RAG FastAPI Application
-
