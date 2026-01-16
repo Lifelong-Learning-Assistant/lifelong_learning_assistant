@@ -16,3 +16,6 @@
 [submodule ".kilocode"]
 	path = .kilocode
 	url = git@github.com:medphisiker/life_long_learning_agent_kilocode_rules.git
+[submodule "user_service"]
+	path = user_service
+	url = git@github.com:Lifelong-Learning-Assisttant/user_service.git
