@@ -4,12 +4,20 @@
 
 echo "🚀 Starting Life Learning Assistant (DEV)..."
 
+# Экспортируем токен для WebSocket
+export WS_TOKEN=dev_token_123
+
+# Создаем внешние сети, если они не существуют
+docker network create rag_rag_network >/dev/null 2>&1
+docker network create test_generator_default >/dev/null 2>&1
+docker network create web_ui_network >/dev/null 2>&1
+
 # Функция для запуска группы
 start_group() {
     local folder=$1
     local project_name=$2
     echo "📂 Starting group: $project_name (folder: $folder)..."
-    docker compose -f "$folder/docker-compose-dev.yml" -p "$project_name" up -d --build
+    (cd "$folder" && docker compose -f docker-compose-dev.yml -p "$project_name" up -d --build)
 }
 
 # 1. RAG Group (База знаний)

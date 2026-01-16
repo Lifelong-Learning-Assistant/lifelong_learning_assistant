@@ -9,7 +9,7 @@ stop_group() {
     local folder=$1
     local project_name=$2
     echo "📂 Stopping group: $project_name..."
-    docker compose -f "$folder/docker-compose-dev.yml" -p "$project_name" down
+    (cd "$folder" && docker compose -f docker-compose-dev.yml -p "$project_name" down)
 }
 
 # Останавливаем в обратном порядке
