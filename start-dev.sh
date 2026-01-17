@@ -43,5 +43,9 @@ start_group "web_ui_service" "lifelong_learning-web_ui"
 # 4. Agent Service (Оркестратор - запускаем последним)
 start_group "agent_service" "lifelong_learning-agent"
 
+# 5. Algo Sandbox (Песочница для кода)
+echo "📂 Starting Algo Sandbox..."
+docker compose -f docker-compose-dev.yml up -d --build algo-sandbox
+
 echo "✅ All groups started!"
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
