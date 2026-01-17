@@ -15,23 +15,32 @@
 
 ### Порядок запуска:
 
-1.  **RAG Service** (`lifelong_learning-rag`)
-    *   Включает: `rag-api`, `rag-qdrant`, `rag-redis`, `ollama`.
-    *   Создает общую сеть `rag_rag_network`.
-    *   Дожидается готовности Qdrant (порт 6333) перед продолжением.
+1.  **User Service** (`lifelong_learning-user_service`)
+    *   Включает: `user-db-local`, `user-service-local`.
+    *   Создает сеть `user_service_network`.
+    *   Инициализирует базу данных (миграции Alembic).
+    *   Регистрирует тестового пользователя.
 
-2.  **Test Generator** (`lifelong_learning-test_gen`)
+2.  **RAG Service** (`lifelong_learning-rag`)
+    *   Включает: `qdrant`, `redis`, `redis-commander`, `rag-api`.
+    *   Создает общую сеть `rag_rag_network`.
+
+3.  **Test Generator** (`lifelong_learning-test_generator`)
     *   Включает: `llm-tester-api`.
     *   Использует сеть `test_generator_default`.
-
-3.  **Agent Service** (`lifelong_learning-agent`)
-    *   Включает: `agent-service`.
-    *   Подключается к сетям RAG, Test Generator и Web UI.
-    *   Ожидает доступности `rag-api` и `test-generator-api` перед запуском.
 
 4.  **Web UI Service** (`lifelong_learning-web_ui`)
     *   Включает: `web-backend`, `web-frontend`.
     *   Создает сеть `web_ui_network`.
+
+5.  **Agent Service** (`lifelong_learning-agent`)
+    *   Включает: `agent-service`.
+    *   Подключается к сетям RAG, Test Generator и Web UI.
+    *   Запускается последним как оркестратор.
+
+6.  **Algo Sandbox** (из корневого docker-compose-dev.yml)
+    *   Включает: `algo-sandbox`.
+    *   Песочница для выполнения кода пользователя.
 
 ### Использование:
 
@@ -47,10 +56,12 @@
 
 ### Порядок остановки:
 
-1.  **Agent Service** (останавливается первым, так как зависит от остальных).
-2.  **Web UI Service**.
-3.  **Test Generator**.
-4.  **RAG Service** (останавливается последним, так как содержит базы данных).
+1.  **Algo Sandbox** (останавливается первым).
+2.  **Agent Service** (останавливается вторым, так как зависит от остальных).
+3.  **Web UI Service**.
+4.  **Test Generator**.
+5.  **RAG Service**.
+6.  **User Service** (останавливается последним, так как содержит базу данных пользователей).
 
 ### Использование:
 
@@ -62,15 +73,22 @@
 
 ## Скрипты PROD окружения
 
-Для запуска системы в продакшн-режиме используются аналогичные скрипты, но работающие с файлами `docker-compose-prod.yml`.
+Для запуска системы в продакшн-режиме используются аналогичные скрипты, но работающие с файлами `docker-compose-prod.yml` и использующие образы из GHCR.
 
 ### Скрипт `start-prod.sh`
 
-Запускает все компоненты системы, используя стабильные образы (как правило, из GHCR).
+Запускает все компоненты системы, используя стабильные образы из GHCR.
 
 ```bash
 ./start-prod.sh
 ```
+
+**Порядок запуска:**
+1. **User Service** — с инициализацией БД и миграциями
+2. **RAG Service** — база знаний
+3. **Test Generator** — генератор тестов
+4. **Web UI Service** — интерфейс (Backend + Frontend)
+5. **Agent Service** — оркестратор
 
 ### Скрипт `stop-prod.sh`
 
@@ -78,6 +96,42 @@
 
 ```bash
 ./stop-prod.sh
+```
+
+**Порядок остановки** (обратный запуску):
+1. **Agent Service**
+2. **Web UI Service**
+3. **Test Generator**
+4. **RAG Service**
+5. **User Service**
+
+### Скрипт `build-prod.sh`
+
+Собирает все Docker образы для PROD окружения.
+
+```bash
+./build-prod.sh
+```
+
+Собирает образы в следующем порядке:
+1. User Service
+2. RAG Service
+3. Test Generator
+4. Web UI Backend
+5. Web UI Frontend
+6. Agent Service
+
+### Скрипт `push-prod.sh`
+
+Отправляет все собранные образы в GitHub Container Registry (GHCR).
+
+```bash
+./push-prod.sh
+```
+
+**Важно:** Перед запуском убедитесь, что вы авторизованы в GHCR:
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 ```
 
 ## Технические детали
@@ -88,6 +142,7 @@
 
 | Сервис | Алиас | Порт | Описание |
 |--------|-------|------|----------|
+| User Service | `user-service` | 8010 | Управление пользователями |
 | Agent Service | `agent-service` | 8270 | Основной API агента |
 | Web Backend | `web-backend` | 8151 | Бэкенд интерфейса |
 | Web Frontend | `web-frontend` | 80 | Фронтенд (Nginx) |
@@ -108,3 +163,14 @@ docker logs -f lifelong_learning-agent-agent_dev-1
 
 # Логи бэкенда UI
 docker logs -f web_ui_service-backend-dev
+
+# Логи User Service
+docker logs -f user-service-local
+
+# PROD окружение
+docker logs -f user-service-prod
+docker logs -f rag-api
+docker logs -f llm-tester-api
+docker logs -f web_ui_backend
+docker logs -f web_ui_frontend
+docker logs -f lifelong_learning-agent-agent-1

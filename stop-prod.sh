@@ -17,5 +17,6 @@ stop_group "agent_service" "lifelong_learning-agent"
 stop_group "web_ui_service" "lifelong_learning-web_ui"
 stop_group "test_generator" "lifelong_learning-test_generator"
 stop_group "rag" "lifelong_learning-rag"
+stop_group "user_service" "lifelong_learning-user_service"
 
 echo "✅ All groups stopped!"

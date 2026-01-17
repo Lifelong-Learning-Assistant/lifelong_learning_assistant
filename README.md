@@ -99,6 +99,47 @@
   - [RAG Service](rag/README.md)
   - [Test Generator](test_generator/README.md)
   - [Web UI Service](web_ui_service/README.md)
+  - [User Service](user_service/README.md)
+
+## 🚀 Развертывание
+
+### DEV окружение
+
+Для запуска системы в режиме разработки:
+
+```bash
+# Запуск всех сервисов
+./start-dev.sh
+
+# Остановка всех сервисов
+./stop-dev.sh
+```
+
+### PROD окружение
+
+Для запуска системы в продакшн-режиме:
+
+```bash
+# Сборка всех Docker образов
+./build-prod.sh
+
+# Публикация образов в GHCR (требуется авторизация)
+./push-prod.sh
+
+# Запуск всех сервисов
+./start-prod.sh
+
+# Остановка всех сервисов
+./stop-prod.sh
+```
+
+**Важно:** Перед запуском PROD окружения убедитесь, что вы авторизованы в GitHub Container Registry:
+
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+Подробнее о развертывании: [Deployment Documentation](docs/deployment/update-prod.md)
 
 ---
 

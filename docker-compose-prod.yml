@@ -3,7 +3,7 @@ name: life_learning_assistant_prod
 services:
   # 1. RAG Service - Production
   rag:
-    image: ghcr.io/lifelong-learning-assisttant/rag_service:v001
+    image: ghcr.io/lifelong-learning-assisttant/rag-api:v001
     ports:
       - "8000:8000"
     environment:
