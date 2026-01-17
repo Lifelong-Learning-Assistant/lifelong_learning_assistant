@@ -11,6 +11,12 @@ docker network create test_generator_default 2>/dev/null || echo "Network test_g
 docker network create web_ui_network 2>/dev/null || echo "Network web_ui_network already exists"
 docker network create user_service_network 2>/dev/null || echo "Network user_service_network already exists"
 
+# 1.5 Создание Docker томов (volumes)
+echo "📦 Creating Docker volumes..."
+docker volume create rag_qdrant_storage 2>/dev/null || echo "Volume rag_qdrant_storage already exists"
+docker volume create rag_redis_data 2>/dev/null || echo "Volume rag_redis_data already exists"
+docker volume create user_postgres_data 2>/dev/null || echo "Volume user_postgres_data already exists"
+
 # 2. Инициализация RAG (Qdrant + Redis)
 echo "📚 Bootstrapping RAG Service (Knowledge Base)..."
 (cd rag && docker compose -f docker-compose-bootstrap.yml up --abort-on-container-exit)
