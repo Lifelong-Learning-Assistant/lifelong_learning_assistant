@@ -12,10 +12,10 @@
 	url = https://github.com/Lifelong-Learning-Assisttant/vpn-utils.git
 [submodule "rag"]
 	path = rag
-	url = git@github.com:Lifelong-Learning-Assisttant/rag.git
+	url = https://github.com/Lifelong-Learning-Assisttant/rag.git
 [submodule ".kilocode"]
 	path = .kilocode
-	url = git@github.com:medphisiker/life_long_learning_agent_kilocode_rules.git
+	url = https://github.com/medphisiker/life_long_learning_agent_kilocode_rules.git
 [submodule "user_service"]
 	path = user_service
-	url = git@github.com:Lifelong-Learning-Assisttant/user_service.git
+	url = https://github.com/Lifelong-Learning-Assisttant/user_service.git
