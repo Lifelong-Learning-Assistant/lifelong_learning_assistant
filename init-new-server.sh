@@ -33,7 +33,7 @@ fi
 
 # 3. Инициализация User Service (PostgreSQL + Migrations)
 echo "👤 Bootstrapping User Service (Database + Migrations)..."
-(cd user_service && docker compose -f user-service/docker-compose-bootstrap.yml up --abort-on-container-exit)
+(cd user_service && docker compose -f docker-compose-bootstrap.yml up --abort-on-container-exit)
 
 if [ $? -eq 0 ]; then
     echo "✅ User Service Bootstrap successful."
