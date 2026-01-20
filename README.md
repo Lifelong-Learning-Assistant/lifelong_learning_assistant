@@ -100,6 +100,7 @@
 # Клонирование основного репозитория
 git clone https://github.com/lifelong-learning-assisttant/lifelong_learning_assistant.git
 cd lifelong_learning_assistant
+git checkout version_2
 
 # Инициализация и обновление всех субмодулей
 git submodule update --init --recursive
@@ -178,4 +179,4 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 
 ---
 
-*README.md обновлен: 2026-01-15*
+*README.md обновлен: 2026-01-20*
