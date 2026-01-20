@@ -19,3 +19,7 @@
 [submodule "user_service"]
 	path = user_service
 	url = https://github.com/Lifelong-Learning-Assisttant/user_service.git
+[submodule "data/algo_problems"]
+	path = data/algo_problems
+	url = https://github.com/Lifelong-Learning-Assisttant/algo_problems.git
+	branch = master
