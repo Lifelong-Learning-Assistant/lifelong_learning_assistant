@@ -7,6 +7,7 @@ data/yandex-handbook-downloaded
 .idea/
 *.swp
 *~
+.kilocode
 Thumbs.db
 
 # Build Artifacts
@@ -32,3 +33,6 @@ tmp/
 
 __pycache__
 .venv
+
+# Nested repositories
+.kilocode/
