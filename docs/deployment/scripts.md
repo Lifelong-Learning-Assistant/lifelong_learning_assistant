@@ -16,30 +16,30 @@
 ### Порядок запуска:
 
 1.  **User Service** (`lifelong_learning-user_service`)
-    *   Включает: `user-db-local`, `user-service-local`.
+    *   Включает: `user-db-dev`, `user-service-dev`.
     *   Создает сеть `user_service_network`.
     *   Инициализирует базу данных (миграции Alembic).
     *   Регистрирует тестового пользователя.
 
 2.  **RAG Service** (`lifelong_learning-rag`)
-    *   Включает: `qdrant`, `redis`, `redis-commander`, `rag-api`.
+    *   Включает: `qdrant-dev`, `redis-dev`, `redis-commander-dev`, `rag-api-dev`.
     *   Создает общую сеть `rag_rag_network`.
 
 3.  **Test Generator** (`lifelong_learning-test_generator`)
-    *   Включает: `llm-tester-api`.
+    *   Включает: `test-generator-dev`.
     *   Использует сеть `test_generator_default`.
 
 4.  **Web UI Service** (`lifelong_learning-web_ui`)
-    *   Включает: `web-backend`, `web-frontend`.
+    *   Включает: `web-ui-backend-dev`, `web-ui-frontend-dev`.
     *   Создает сеть `web_ui_network`.
 
 5.  **Agent Service** (`lifelong_learning-agent`)
-    *   Включает: `agent-service`.
+    *   Включает: `agent-service-dev`.
     *   Подключается к сетям RAG, Test Generator и Web UI.
     *   Запускается последним как оркестратор.
 
 6.  **Algo Sandbox** (из корневого docker-compose-dev.yml)
-    *   Включает: `algo-sandbox`.
+    *   Включает: `algo-sandbox-dev`.
     *   Песочница для выполнения кода пользователя.
 
 ### Использование:
@@ -159,18 +159,18 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
 
 ```bash
 # Логи агента
-docker logs -f lifelong_learning-agent-agent_dev-1
+docker logs -f agent-service-dev
 
 # Логи бэкенда UI
-docker logs -f web_ui_service-backend-dev
+docker logs -f web-ui-backend-dev
 
 # Логи User Service
-docker logs -f user-service-local
+docker logs -f user-service-dev
 
 # PROD окружение
 docker logs -f user-service-prod
-docker logs -f rag-api
-docker logs -f llm-tester-api
-docker logs -f web_ui_backend
-docker logs -f web_ui_frontend
-docker logs -f lifelong_learning-agent-agent-1
+docker logs -f rag-api-prod
+docker logs -f test-generator-prod
+docker logs -f web-ui-backend-prod
+docker logs -f web-ui-frontend-prod
+docker logs -f agent-service-prod

@@ -1,51 +1,198 @@
 #!/bin/bash
 
 # Скрипт для первичной инициализации системы на новом сервере
+# Требования: docker, docker compose, curl
+# Использование: ./init-new-server.sh [prod|dev] (default: prod)
 
-echo "🌟 Initializing Life Learning Assistant on a new server..."
+set -e # Прерывать выполнение при ошибках
 
-# 1. Создание Docker-сетей
-echo "🌐 Creating Docker networks..."
-docker network create rag_rag_network 2>/dev/null || echo "Network rag_rag_network already exists"
-docker network create test_generator_default 2>/dev/null || echo "Network test_generator_default already exists"
-docker network create web_ui_network 2>/dev/null || echo "Network web_ui_network already exists"
-docker network create user_service_network 2>/dev/null || echo "Network user_service_network already exists"
+ENV=${1:-prod}
+if [ "$ENV" != "prod" ] && [ "$ENV" != "dev" ]; then
+    echo "❌ Ошибка: Неверное окружение. Используйте 'prod' или 'dev'."
+    exit 1
+fi
 
-# 1.5 Создание Docker томов (volumes)
-echo "📦 Creating Docker volumes..."
-docker volume create rag_qdrant_storage 2>/dev/null || echo "Volume rag_qdrant_storage already exists"
-docker volume create rag_redis_data 2>/dev/null || echo "Volume rag_redis_data already exists"
-docker volume create user_postgres_data 2>/dev/null || echo "Volume user_postgres_data already exists"
+echo "🌟 Инициализация Life Learning Assistant на новом сервере (Окружение: $ENV)..."
 
-# 2. Инициализация RAG (Qdrant + Redis)
-echo "📚 Bootstrapping RAG Service (Knowledge Base)..."
+# Определение переменных в зависимости от окружения
+if [ "$ENV" == "dev" ]; then
+    COMPOSE_FILE="docker-compose-dev.yml"
+    PROJECT_NAME="lifelong_learning-rag" # Имя проекта из start-dev.sh
+    USER_PROJECT_NAME="lifelong_learning-user_service"
+    REDIS_CONTAINER="redis-dev"
+    USER_SERVICE_CONTAINER="user-service-dev"
+else
+    COMPOSE_FILE="docker-compose-prod.yml"
+    PROJECT_NAME="lifelong_learning-rag"
+    USER_PROJECT_NAME="lifelong_learning-user_service"
+    REDIS_CONTAINER="redis-prod"
+    USER_SERVICE_CONTAINER="user-service-prod"
+fi
+
+# 0. Подготовка Docker сетей и томов
+echo "🌐 Создание Docker Networks..."
+docker network create rag_rag_network >/dev/null 2>&1 || echo "Network rag_rag_network уже существует"
+docker network create test_generator_default >/dev/null 2>&1 || echo "Network test_generator_default уже существует"
+docker network create web_ui_network >/dev/null 2>&1 || echo "Network web_ui_network уже существует"
+docker network create user_service_network >/dev/null 2>&1 || echo "Network user_service_network уже существует"
+
+echo "📦 Создание Docker Volumes..."
+docker volume create rag_qdrant_storage >/dev/null 2>&1 || echo "Volume rag_qdrant_storage уже существует"
+docker volume create rag_redis_data >/dev/null 2>&1 || echo "Volume rag_redis_data уже существует"
+docker volume create user_postgres_data >/dev/null 2>&1 || echo "Volume user_postgres_data уже существует"
+
+# 1. Pull Docker images
+echo "⬇️ Pull Docker образов..."
+# RAG images
+docker pull qdrant/qdrant:v1.12.4
+docker pull redis:7.4.2-alpine
+docker pull rediscommander/redis-commander:latest
+docker pull medphisiker/rag-backup-downloader:v001
+# User Service images
+docker pull postgres:15.15-alpine
+# Примечание: rag-api, user-service собираются из исходников в DEV режиме, или пулятся в PROD.
+# Предполагаем подготовку к DEV/PROD гибридному режиму или просто настройку данных.
+
+# 2. Start RAG Group (Qdrant, Redis, RAG API)
+echo "🚀 Запуск группы сервисов RAG..."
+# В PROD не используем --build, если образы уже спулены, но для надежности оставим (docker compose сам решит)
+(cd rag && docker compose -f $COMPOSE_FILE -p "$PROJECT_NAME" up -d)
+
+echo "⏳ Ожидание готовности RAG API..."
+# Ждем ответа от RAG API (изначально может быть unhealthy из-за пустых баз)
+for i in $(seq 1 30); do
+    if curl -s http://localhost:8000/health > /dev/null; then
+        echo "✅ RAG API отвечает."
+        break
+    fi
+    echo "📡 Ожидание RAG API... ($i/30)"
+    sleep 5
+done
+
+# 3. Restore Databases (Qdrant & Redis)
+echo "📚 Восстановление базы знаний (Bootstrap)..."
+
+# Важно: Останавливаем Redis перед распаковкой, чтобы он не перезаписал dump.rdb при выключении
+# И чтобы мы могли безопасно подложить файл
+echo "🛑 Временная остановка Redis ($REDIS_CONTAINER) для безопасной распаковки..."
+docker stop $REDIS_CONTAINER
+
+# Делаем скрипт загрузчика исполняемым
+chmod +x rag/backup_downloader/bootstrap_and_restore.sh
+
+# Запускаем загрузчик, который подключится к уже запущенным Qdrant и Redis (Redis остановлен, но volume доступен)
+# Примечание: bootstrap-loader пытается подключиться к Redis только если это нужно.
+# В текущем bootstrap скрипте он делает 'tar xzf ... -C /redis_data'. Это работа с файловой системой, Redis не нужен запущенным.
+# Но он может ждать Qdrant. Qdrant мы не останавливаем.
 (cd rag && docker compose -f docker-compose-bootstrap.yml up --abort-on-container-exit)
 
+BOOTSTRAP_STATUS="❌ Ошибка"
 if [ $? -eq 0 ]; then
-    echo "✅ RAG Bootstrap successful."
+    echo "✅ Скачивание backup и распаковка успешны."
+    BOOTSTRAP_STATUS="✅ Успешно"
 else
-    echo "❌ RAG Bootstrap failed!"
+    echo "❌ Ошибка Bootstrap!"
     exit 1
 fi
-
-# Очистка временных контейнеров бутстрапа, но сохранение томов
+# Очистка контейнера загрузчика
 (cd rag && docker compose -f docker-compose-bootstrap.yml down)
 
-# 3. Инициализация User Service (PostgreSQL + Migrations)
-echo "👤 Bootstrapping User Service (Database + Migrations)..."
-(cd user_service && docker compose -f docker-compose-bootstrap.yml up --abort-on-container-exit)
+# 4. Start Redis to load the restored dump.rdb
+echo "▶️ Запуск Redis ($REDIS_CONTAINER) с восстановленными данными..."
+docker start $REDIS_CONTAINER
+echo "⏳ Ожидание готовности Redis..."
+sleep 5
 
-if [ $? -eq 0 ]; then
-    echo "✅ User Service Bootstrap successful."
-else
-    echo "❌ User Service Bootstrap failed!"
-    exit 1
+# 5. Verify RAG Health and Data Counts
+echo "🔍 Проверка RAG Health и данных..."
+
+HEALTH_RESPONSE=$(curl -s http://localhost:8000/health)
+echo "Health Response: $HEALTH_RESPONSE"
+
+# Парсим JSON ответ с помощью Python
+QDRANT_COUNT=$(echo $HEALTH_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin).get('collection_vectors_count', 0))")
+REDIS_COUNT=$(echo $HEALTH_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin).get('redis_parent_docs_count', 0))")
+
+echo "📊 Статистика:"
+echo "   - Qdrant Vectors: $QDRANT_COUNT"
+echo "   - Redis Docs: $REDIS_COUNT"
+
+if [ "$QDRANT_COUNT" == "0" ] || [ "$QDRANT_COUNT" == "None" ]; then
+    echo "⚠️ WARNING: Коллекция Qdrant пуста!"
 fi
 
-# Очистка временных контейнеров бутстрапа
-(cd user_service && docker compose -f docker-compose-bootstrap.yml down)
+if [ "$REDIS_COUNT" == "0" ] || [ "$REDIS_COUNT" == "None" ]; then
+    echo "⚠️ WARNING: Хранилище Redis пусто!"
+fi
+
+# Сохраняем статусы для отчета
+QDRANT_STATUS="✅ OK ($QDRANT_COUNT векторов)"
+if [ "$QDRANT_COUNT" == "0" ] || [ "$QDRANT_COUNT" == "None" ]; then QDRANT_STATUS="⚠️ WARNING (0 векторов)"; fi
+
+REDIS_STATUS="✅ OK ($REDIS_COUNT документов)"
+if [ "$REDIS_COUNT" == "0" ] || [ "$REDIS_COUNT" == "None" ]; then REDIS_STATUS="⚠️ WARNING (0 документов)"; fi
+
+# 6. Initialize User Service
+echo "👤 Инициализация User Service..."
+
+# Start User Service Group
+(cd user_service && docker compose -f $COMPOSE_FILE -p "$USER_PROJECT_NAME" up -d)
+
+echo "⏳ Ожидание User Service DB..."
+sleep 10 # Даем время базе подняться
+
+# Apply Migrations
+echo "🔧 Применение DB Migrations..."
+if docker exec $USER_SERVICE_CONTAINER uv run alembic upgrade head; then
+    USER_DB_STATUS="✅ Успешно (Миграции применены)"
+else
+    USER_DB_STATUS="❌ Ошибка миграций"
+fi
+
+# Create and Check Test User
+echo "🧪 Создание тестового пользователя (с ролью developer)..."
+# Создаем
+if docker exec $USER_SERVICE_CONTAINER uv run python scripts/register_user.py test_bootstrap_user test_password developer; then
+    USER_CREATE_STATUS="✅ Успешно"
+else
+    USER_CREATE_STATUS="❌ Ошибка создания"
+fi
+
+# Проверка массового создания (если файл существует)
+if [ -f "users_to_create.json" ]; then
+    echo "👥 Массовое создание пользователей из users_to_create.json..."
+    docker cp users_to_create.json $USER_SERVICE_CONTAINER:/app/users_to_create.json
+    docker exec $USER_SERVICE_CONTAINER uv run python scripts/bulk_create_users.py users_to_create.json
+    USER_BULK_STATUS="✅ Успешно"
+else
+    USER_BULK_STATUS="➖ Пропущено (файл не найден)"
+fi
+
+# Проверяем список пользователей
+echo "📋 Список пользователей:"
+docker exec $USER_SERVICE_CONTAINER uv run python scripts/list_users.py
+
+# Удаляем пользователя через скрипт
+echo "🗑️ Удаление тестового пользователя..."
+if docker exec $USER_SERVICE_CONTAINER uv run python scripts/delete_user.py test_bootstrap_user; then
+    USER_DELETE_STATUS="✅ Успешно"
+else
+    USER_DELETE_STATUS="❌ Ошибка удаления"
+fi
 
 echo ""
-echo "🎉 System initialization completed successfully!"
-echo "🚀 You can now start the production environment using:"
-echo "   ./start-prod.sh"
+echo "=================================================="
+echo "📊 ИТОГОВЫЙ ОТЧЕТ ИНИЦИАЛИЗАЦИИ ($ENV)"
+echo "=================================================="
+echo "1. Загрузка базы знаний (RAG):      $BOOTSTRAP_STATUS"
+echo "2. Состояние Qdrant (Векторы):      $QDRANT_STATUS"
+echo "3. Состояние Redis (Документы):     $REDIS_STATUS"
+echo "4. База данных User Service:        $USER_DB_STATUS"
+echo "5. Тест создания пользователя:      $USER_CREATE_STATUS"
+echo "6. Массовое создание (JSON):        $USER_BULK_STATUS"
+echo "7. Тест удаления пользователя:      $USER_DELETE_STATUS"
+echo "=================================================="
+
+echo ""
+echo "🎉 Инициализация системы завершена!"
+echo "🚀 Теперь вы можете использовать систему."

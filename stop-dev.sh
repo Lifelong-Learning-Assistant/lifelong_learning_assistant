@@ -14,7 +14,7 @@ stop_group() {
 
 # Останавливаем в обратном порядке
 echo "📂 Stopping Algo Sandbox..."
-docker compose -f docker-compose-dev.yml stop algo-sandbox 2>/dev/null || true
+docker compose -f docker-compose-dev.yml stop algo-sandbox-dev 2>/dev/null || true
 
 stop_group "agent_service" "lifelong_learning-agent"
 stop_group "web_ui_service" "lifelong_learning-web_ui"

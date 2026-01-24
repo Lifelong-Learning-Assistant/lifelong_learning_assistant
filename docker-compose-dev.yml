@@ -4,7 +4,7 @@ services:
   # 0. User Service - Управление пользователями
   user_db:
     image: postgres:15.15-alpine
-    container_name: user_db
+    container_name: user-db-dev
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -20,7 +20,7 @@ services:
       retries: 5
 
   user_service:
-    container_name: user_service
+    container_name: user-service-dev
     build:
       context: ./user_service
       dockerfile: Dockerfile-dev
@@ -44,7 +44,7 @@ services:
 
   # 1. RAG Service - Базовый сервис для поиска
   rag:
-    container_name: rag_service
+    container_name: rag-api-dev
     build:
       context: ./rag
       dockerfile: Dockerfile
@@ -61,7 +61,7 @@ services:
       - redis
 
   qdrant:
-    container_name: rag_qdrant
+    container_name: qdrant-dev
     image: qdrant/qdrant:v1.12.4
     ports:
       - "6333:6333"
@@ -72,7 +72,7 @@ services:
       - rag_network
 
   redis:
-    container_name: rag_redis
+    container_name: redis-dev
     image: redis:7.4.2-alpine
     ports:
       - "6379:6379"
@@ -81,7 +81,7 @@ services:
 
   # 2. Test Generator - Генерация квизов
   test_generator:
-    container_name: test_generator
+    container_name: test-generator-dev
     build:
       context: ./test_generator
       dockerfile: Dockerfile
@@ -93,7 +93,7 @@ services:
 
   # 3. Agent Service - Оркестратор
   agent_service:
-    container_name: agent_service
+    container_name: agent-service-dev
     build:
       context: ./agent_service
       dockerfile: Dockerfile-dev
@@ -116,7 +116,7 @@ services:
 
   # 4. Web UI Backend
   web_ui_backend:
-    container_name: web_ui_backend
+    container_name: web-ui-backend-dev
     build:
       context: ./web_ui_service/backend
       dockerfile: Dockerfile-dev
@@ -136,7 +136,7 @@ services:
 
   # 5. Algo Sandbox
   algo-sandbox:
-    container_name: algo-sandbox
+    container_name: algo-sandbox-dev
     build:
       context: ./web_ui_service/backend
       dockerfile: Dockerfile-sandbox
@@ -147,7 +147,7 @@ services:
 
   # 6. Web UI Frontend
   web_ui_frontend:
-    container_name: web_ui_frontend
+    container_name: web-ui-frontend-dev
     build:
       context: ./web_ui_service/frontend
       dockerfile: Dockerfile-dev

@@ -1,3 +1,6 @@
+# Ignore users
+users.json
+
 # Ignore Yandex handbook raw markdown data
 data/yandex-handbook-downloaded
 

@@ -26,10 +26,10 @@ start_group "user_service" "lifelong_learning-user_service"
 echo "🔧 Initializing User Database (Migrations + Test User)..."
 
 # Ждем готовности базы данных перед миграциями
-docker exec user-service-local uv run alembic upgrade head
+docker exec user-service-dev uv run alembic upgrade head
 
 # Регистрация пользователя (идемпотентно)
-docker exec user-service-local uv run python scripts/register_user.py test_user test_password || echo "ℹ️ Test user already exists or initialization skipped."
+docker exec user-service-dev uv run python scripts/register_user.py test_user test_password || echo "ℹ️ Test user already exists or initialization skipped."
 
 # 1. RAG Group (База знаний)
 start_group "rag" "lifelong_learning-rag"
