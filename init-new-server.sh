@@ -29,7 +29,25 @@ else
     USER_SERVICE_CONTAINER="user-service-prod"
 fi
 
-# 0. Подготовка Docker сетей и томов
+# 0. Проверка конфигурации и сети
+echo "🔍 Проверка доступности LLM API..."
+if [ -f "rag/.env" ]; then
+    API_BASE=$(grep OPENAI_API_BASE rag/.env | cut -d'=' -f2)
+    API_KEY=$(grep OPENAI_API_KEY rag/.env | cut -d'=' -f2)
+    
+    if [ ! -z "$API_BASE" ] && [ ! -z "$API_KEY" ]; then
+        echo "📡 Тестирование соединения с $API_BASE..."
+        if curl -s -o /dev/null -m 10 "$API_BASE"; then
+            echo "✅ LLM API доступен."
+        else
+            echo "⚠️  WARNING: Не удалось подключиться к LLM API ($API_BASE). Возможны проблемы при запуске RAG API."
+        fi
+    fi
+else
+    echo "⚠️  WARNING: Файл rag/.env не найден. Проверка API пропущена."
+fi
+
+# 0.1 Подготовка Docker сетей и томов
 echo "🌐 Создание Docker Networks..."
 docker network create rag_rag_network >/dev/null 2>&1 || echo "Network rag_rag_network уже существует"
 docker network create test_generator_default >/dev/null 2>&1 || echo "Network test_generator_default уже существует"
@@ -53,20 +71,18 @@ docker pull postgres:15.15-alpine
 # Примечание: rag-api, user-service собираются из исходников в DEV режиме, или пулятся в PROD.
 # Предполагаем подготовку к DEV/PROD гибридному режиму или просто настройку данных.
 
-# 2. Start RAG Group (Qdrant, Redis, RAG API)
-echo "🚀 Запуск группы сервисов RAG..."
-# В PROD не используем --build, если образы уже спулены, но для надежности оставим (docker compose сам решит)
-(cd rag && docker compose -f $COMPOSE_FILE -p "$PROJECT_NAME" up -d)
+# 2. Start RAG Infrastructure (Qdrant, Redis)
+echo "🚀 Запуск инфраструктуры RAG (Qdrant, Redis)..."
+(cd rag && docker compose -f $COMPOSE_FILE -p "$PROJECT_NAME" up -d qdrant redis)
 
-echo "⏳ Ожидание готовности RAG API..."
-# Ждем ответа от RAG API (изначально может быть unhealthy из-за пустых баз)
-for i in $(seq 1 30); do
-    if curl -s http://localhost:8000/health > /dev/null; then
-        echo "✅ RAG API отвечает."
+echo "⏳ Ожидание готовности Qdrant..."
+for i in $(seq 1 10); do
+    if curl -s http://localhost:6333/ > /dev/null; then
+        echo "✅ Qdrant готов."
         break
     fi
-    echo "📡 Ожидание RAG API... ($i/30)"
-    sleep 5
+    echo "📡 Ожидание Qdrant... ($i/10)"
+    sleep 3
 done
 
 # 3. Restore Databases (Qdrant & Redis)
@@ -102,6 +118,20 @@ echo "▶️ Запуск Redis ($REDIS_CONTAINER) с восстановленн
 docker start $REDIS_CONTAINER
 echo "⏳ Ожидание готовности Redis..."
 sleep 5
+
+# 4.1 Start RAG API now that data is restored
+echo "🚀 Запуск RAG API и остальных сервисов..."
+(cd rag && docker compose -f $COMPOSE_FILE -p "$PROJECT_NAME" up -d)
+
+echo "⏳ Ожидание готовности RAG API..."
+for i in $(seq 1 30); do
+    if curl -s http://localhost:8000/health > /dev/null; then
+        echo "✅ RAG API отвечает."
+        break
+    fi
+    echo "📡 Ожидание RAG API... ($i/30)"
+    sleep 5
+done
 
 # 5. Verify RAG Health and Data Counts
 echo "🔍 Проверка RAG Health и данных..."
@@ -189,7 +219,7 @@ echo "2. Состояние Qdrant (Векторы):      $QDRANT_STATUS"
 echo "3. Состояние Redis (Документы):     $REDIS_STATUS"
 echo "4. База данных User Service:        $USER_DB_STATUS"
 echo "5. Тест создания пользователя:      $USER_CREATE_STATUS"
-echo "6. Массовое создание (JSON):        $USER_BULK_STATUS"
+echo "6. Создание пользоватлей (из JSON): $USER_BULK_STATUS"
 echo "7. Тест удаления пользователя:      $USER_DELETE_STATUS"
 echo "=================================================="
 

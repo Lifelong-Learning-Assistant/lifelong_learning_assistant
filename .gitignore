@@ -1,5 +1,6 @@
-# Ignore users
+# Ignore user account data.
 users.json
+users_to_create.json
 
 # Ignore Yandex handbook raw markdown data
 data/yandex-handbook-downloaded
